@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+use Getopt::Std;
+getopts("S:r:");
+
+my $SUBJECT = $opt_S if defined $opt_S;
+my $hostName=`hostname`;
+chomp($hostName);
+$SUBJECT=~s/HOSTNAME/$hostName/;
+my $RECIPIENT = $opt_r if defined $opt_r;
+
+# Heh!  http://lists.grok.org.uk/pipermail/full-disclosure/2008-February/060390.html
+$RECIPIENT =~ s/[\\'";]//g ;
+$RECIPIENT = '"' . $RECIPIENT . '"';
+
+open OUTFILE, "|/usr/sbin/sendmail $RECIPIENT";
+
+print OUTFILE "From: noreply\@$hostName\n";
+print OUTFILE "Subject: $SUBJECT\n\n";
+while (<>) {
+    print OUTFILE $_;
+}
+close(OUTFILE);
+1;

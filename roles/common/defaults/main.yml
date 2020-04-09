@@ -1,0 +1,5 @@
+---
+email_notification: "email@yourdomain.xxx"
+logsurfer_user: "logsurf"
+install_prefix: "/usr/local"
+logsurfer_path: "/var/logsurfer"

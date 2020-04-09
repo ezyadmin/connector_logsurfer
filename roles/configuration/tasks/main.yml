@@ -1,0 +1,145 @@
+---
+- name: "Configuration: Copy Logsurfer service management to /etc/init.d"
+  become: true
+  template:
+    src: "templates/logsurfer.j2"
+    dest: "/etc/init.d/logsurfer"
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: "Configuration: Copy Logsurfer check service to chkserv.d"
+  become: true
+  copy:
+    src: "../../files/_etc_chkserv.d_logsurfer"
+    dest: "/etc/chkserv.d/logsurfer"
+    owner: "root"
+    group: "root"
+    mode: 0755
+  failed_when: false
+
+- name: "Configuration: Copy ezyAdminApi to /usr/bin/ezyAdminApi"
+  become: true
+  template:
+    src: "_usr_bin_ezyAdminApi.j2"
+    dest: "/usr/bin/ezyAdminApi"
+    owner: "root"
+    group: "root"
+    mode: 0755
+  failed_when: false
+
+- name: "Configuration: Copy _etc_logsurfer.sh.j2 to {{ logsurfer_path }}/etc/logsurfer.sh"
+  become: true
+  template:
+    src: "_etc_logsurfer.sh.j2"
+    dest: "{{ logsurfer_path }}/etc/logsurfer.sh"
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: "Configuration: ensure file exists"
+  become: true
+  copy:
+    content: ""
+    dest: "/var/log/logsurfer.log"
+    force: no
+    owner: "{{ logsurfer_user }}"
+    group: "{{ logsurfer_user }}"
+    mode: 0555
+
+- name: "Configuration: logrotate configuration"
+  become: true
+  blockinfile:
+    path: "{{ logsurfer_path }}/etc/{{ item.configfile }}"
+    block: "{{ item.data | default('')}}"
+    create: true
+    backup: "{{ item.makeconf.backup_conf | default(false)}}"
+    owner: "{{ logsurfer_user }}"
+    group: "{{ logsurfer_user }}"
+    mode: 0644
+  when: item.configfile is defined
+  loop: "{{ paths | default([]) }}"
+
+#- name: "Configuration: Copy Logsurfer monitor confuguration files"
+#  become: true
+#  copy:
+#    src: "files/{{ item.configfile }}"
+#    dest: "{{ logsurfer_path }}/etc/{{ item.configfile }}"
+#    owner: "{{ logsurfer_user }}"
+#    group: "{{ logsurfer_user }}"
+#    mode: 0644
+#  with_items: "{{ paths }}"
+
+- name: "Configuration: Enable logsurfer supervisord service"
+  become: true
+  service: name=logsurfer enabled=yes
+
+- name: "Configuration: Change permission on log files, allow logsurfer to read files"
+  become: true
+  file:
+    path: "{{ item.monitorfile }}"
+    mode: 0640
+  with_items: "{{ paths }}"
+  failed_when: false
+
+- name: "Configuration: logrotate configuration"
+  become: true
+  blockinfile:
+    path: "{{ item.makeconf.file }}"
+    block: "{{ item.makeconf.conf }}"
+    create: true
+    backup: "{{ item.makeconf.backup_conf | default(false)}}"
+  when: item.makeconf is defined
+  loop: "{{ logrotate | default([]) }}"
+
+#- name: "Configuration: Copy EzyAdmin update logrotate configuration script to /usr/bin"
+#  become: true
+#  copy:
+#    src: "files/_usr_bin_ezyupdatelogrotate.pl"
+#    dest: "/usr/bin/ezyupdatelogrotate"
+#    owner: "root"
+#    group: "root"
+#    mode: 0755
+
+#- name: "Configuration: logrotate configuration update (create)"
+#  become: true
+#  shell: /usr/bin/ezyupdatelogrotate -f '{{item.setoptions.path}}' -c '{{item.setoptions.create}}'
+#  when: item.setoptions is defined and item.setoptions.create
+#  loop: "{{ logrotate | default([]) }}"
+
+#- name: "Configuration: logrotate configuration update (postrotate)"
+#  become: true
+#  shell: /usr/bin/ezyupdatelogrotate -f '{{item.setoptions.path}}' -p '{{item.setoptions.postrotate}}'
+#  when: item.setoptions is defined and item.setoptions.postrotate
+#  loop: "{{ logrotate | default([]) }}"
+
+- name: Check checkserv.d to monitor
+  stat:
+    path: /scripts/restartsrv_chkservd
+  register: chkservd_result
+
+- name: "Configuration: Copy _etc_chkserv.d_logsurfer.j2 to /etc/chkserv.d/logsurfer"
+  become: true
+  template:
+    src: "_etc_chkserv.d_logsurfer.j2"
+    dest: "/etc/chkserv.d/logsurfer"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  when: chkservd_result.stat.exists == True
+
+- name: "Configuration: Set checkserv.d to monitor logsurfer"
+  become: true
+  lineinfile:
+    path: /etc/chkserv.d/chkservd.conf
+    regexp: "^[\\s|#]*logsurfer:.*"
+    line: "logsurfer:1"
+    create: yes
+
+- name: "Configuration: Start/Restart logsurfer services"
+  become: true
+  service:
+    name: logsurfer
+    state: restarted
+    enabled: yes
+  ignore_errors: True

@@ -1,0 +1,28 @@
+---
+- name: Stop services
+  become: true
+  service:
+    name: logsurfer 
+    state: stoped
+  ignore_errors: True
+
+- name: Start services
+  become: true
+  service:
+    name: logsurfer 
+    state: started
+  ignore_errors: True
+
+- name: Restart services
+  become: true
+  service:
+    name: logsurfer 
+    state: restarted
+  ignore_errors: True
+
+- name: Disabled logsurfer services
+  become: true
+  service:
+    name: logsurfer 
+    enabled: no
+  ignore_errors: True

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+if [[ -f /var/lock/subsys/logsurfer ]]
+then
+    echo -n $"Logsurfer already start (/var/lock/subsys/logsurfer), run 'logsurfer stop' to and start the service again. If not work remove /var/lock/subsys/logsurfer and try again."
+    exit 0            
+fi
+
+# Source function library; daemon and killproc command
+. /etc/init.d/functions
+
+LOGSURFER_USER=root
+LOGSURFER_HOME={{ logsurfer_path }}
+LOGSURFER_EXE={{ install_prefix }}/bin/logsurfer
+LOGSURFER_LOGFILE="/var/log/logsurfer.log"
+# Not sure we can share logsurfer log file for each instance.
+
+FINALRETVAL=0
+
+{% for path in paths %}
+  SYSLOG_FILE={{ path["monitorfile"] }}
+  if [[ -f $SYSLOG_FILE ]]
+  then
+    LOGSURFER_CONFFILE=$LOGSURFER_HOME/etc/{{ path["configfile"] }}
+    LOGSURFER_PIDFILE=$LOGSURFER_HOME/dump/{{ path["key"] }}.pid
+    LOGSURFER_DUMPFILE=$LOGSURFER_HOME/dump/{{ path["key"] }}.dump
+
+    RETVAL=0
+
+    LOGSURFER_ARGS="-c $LOGSURFER_CONFFILE -d $LOGSURFER_DUMPFILE -f -F -p $LOGSURFER_PIDFILE -t -e $SYSLOG_FILE"
+    daemon +19 --user $LOGSURFER_USER "$LOGSURFER_EXE $LOGSURFER_ARGS >>$LOGSURFER_LOGFILE 2>&1 &"
+    RETVAL=$?
+    if [[ $RETVAL -ne 0 ]]
+    then
+      echo            
+      echo -n $"Start logsurfer for $SYSLOG_FILE fail"
+      echo
+      echo $RETVAL
+      FINALRETVAL=$RETVAL
+    fi
+  else
+    echo -n $"File $SYSLOG_FILE does not exist"
+  fi
+
+{% endfor %}
+exit $FINALRETVAL

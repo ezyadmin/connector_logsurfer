@@ -1,0 +1,104 @@
+---
+#- name: "Install: Ensure create logsurfer user"
+#  become: true
+#  user:
+#    name: "{{ logsurfer_user }}"
+#    comment: "logsurfer user"
+#    home: "/dev/null"
+#    shell: "/sbin/nologin"
+#  when: regis_logsurfer_localbin.stat is defined and regis_logsurfer_localbin.stat.exists != true
+#
+#- name: "Install: Appending the groups 'root,mail,wheel' to the logsurfer user's"
+#  become: true
+#  user:
+#    name: "{{ logsurfer_user }}"
+#    groups: root,mail,wheel
+#    append: yes
+
+- name: "Install: packages using a list"
+  become: true
+  when: ansible_os_family == "RedHat"
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - libselinux-python
+      - initscripts
+      - gcc
+      - logrotate
+      - chkconfig
+
+- name: "Install: packages using a list"
+  become: true
+  when: ansible_os_family == "RedHat"
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - libselinux-python
+      - initscripts
+      - gcc
+      - logrotate
+
+- name: "Install: packages using a list"
+  become: true
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - python-selinux
+      - initscripts
+      - gcc
+      - logrotate
+      - sysv-rc-conf
+
+- name: "Install: Ensure logsurfer files/directory is present"
+  become: true
+  file: path={{ item.path }} state={{ item.state }} owner={{ item.owner }} group={{ item.group }}
+  with_items:
+    - { path: "{{ logsurfer_path }}/build", state: "directory", owner: "root", group: "root", mode: 755 }
+    - { path: "{{ logsurfer_path }}/etc", state: "directory", owner: "{{ logsurfer_user }}", group: "{{ logsurfer_user}}", mode: 755 }
+    - { path: "{{ logsurfer_path }}/dump", state: "directory", owner: "{{ logsurfer_user }}", group: "{{ logsurfer_user}}", mode: 755 }
+    - { path: "{{ logsurfer_path }}/log", state: "directory", owner: "{{ logsurfer_user }}", group: "{{ logsurfer_user}}", mode: 755 }
+    - { path: "{{ logsurfer_path }}/message.log", state: "touch", owner: "{{ logsurfer_user }}", group: "{{ logsurfer_user}}", mode: 644 }
+
+#- name: Download logsurfer package file
+#  become: true
+#  get_url:
+#    url: "https://jaist.dl.sourceforge.net/project/logsurfer/logsurfer/logsurfer-{{ vars_logsurfer_version }}/logsurfer-{{ vars_logsurfer_version }}.tar.gz"
+#    dest: "{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}.tar.gz"
+#    force: yes
+#    validate_certs: no
+- name: "Install: Copy logsurfer package file"
+  become: true
+  copy:
+    src: "files/logsurfer-{{ vars_logsurfer_version }}.tar.gz"
+    dest: "{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}.tar.gz"
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: "Install: Extract logsurfer package"
+  become: true
+  unarchive:
+    src: "{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}.tar.gz"
+    dest: "{{ logsurfer_path }}/build"
+    remote_src: yes
+
+- name: "Install: Configure logsurfer"
+  become: true
+  command: chdir="{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}" ./configure --prefix={{install_prefix}} --with-etcdir={{ logsurfer_path }}/etc
+
+- name: "Install: Build logsurfer"
+  become: true
+  make: chdir="{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}"
+
+- name: "Install: Run install logsurfer"
+  become: true
+  make:
+    chdir: "{{ logsurfer_path }}/build/logsurfer-{{ vars_logsurfer_version }}"
+    target: "install"

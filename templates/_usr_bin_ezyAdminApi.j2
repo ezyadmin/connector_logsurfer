@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+use Getopt::Std;
+use JSON qw( decode_json );
+use LWP::UserAgent;
+
+getopts("S:i:d:");
+
+my $DEBUG = $opt_d if defined $opt_d;
+my $SUBJECT = $opt_S if defined $opt_S;
+my $triggerID = $opt_i if defined $opt_i;
+my $hostName = `hostname -f`;
+chomp($hostName);
+$SUBJECT=~s/\{HOST\.NAME\}/$hostName/;
+
+my $message = "";
+
+if (!$DEBUG) {
+  while (<>) {
+    $message .= $_;
+  }
+} else {
+  $message = "Debug mode"
+}
+
+if ($DEBUG) {
+  print "========================================\n";
+  print "Trigger ID: $triggerID\n";
+  print "Subject: $SUBJECT\n";
+  print "Server name: $hostName\n";
+  print "Message:\n";
+  print "---------------------------------------\n";
+  print $message;
+  print "---------------------------------------\n";
+}
+
+
+my $data = {
+  subject => $SUBJECT,
+  message => $message,
+  trigger => $triggerID,
+  servername => $hostName,
+};
+
+my $uri = "{{ EzyAdminAPI_URL }}";
+
+my $browser = LWP::UserAgent->new(ssl_opts => { verify_hostname => 0 });
+my $response = $browser->post(
+  $uri . '/incidents',
+  $data
+);
+if ($DEBUG) {
+  print "Incidents API Responst:\n";
+  print "---------------------------------------\n";
+  if ($response->is_success) {
+    print "Response is success.\n";
+    print $response->content
+  } else {
+    print "Response is NOT success.\n";
+    print $response->status_line;
+  }
+  print "---------------------------------------\n";
+}

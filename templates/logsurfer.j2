@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+# logsurfer        Starts logsurfer
+#
+#
+# chkconfig: 2345 16 94
+# description: Logsurfer monitors syslog files
+### BEGIN INIT INFO
+# Provides: $logsurfer
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+[ -f {{ install_prefix }}/bin/logsurfer ] || exit 0
+
+# config
+LOGSURFER_HOME={{ logsurfer_path }}
+if [ ! -f $LOGSURFER_HOME/etc/logsurfer.sh ] ; then
+        echo -n $"logsurfer configuration $LOGSURFER_HOME/etc/logsurfer.sh files doesn't exist"
+        echo
+        exit 0
+fi
+
+RETVAL=0
+umask 077
+
+start() {
+        echo -n $"Starting logsurfer: "
+        sh $LOGSURFER_HOME/etc/logsurfer.sh
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/logsurfer
+        return $RETVAL
+}
+stop() {
+        echo -n $"Shutting down logsurfer: "
+        killproc logsurfer
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/logsurfer
+        return $RETVAL
+}
+rhstatus() {
+        status logsurfer
+}
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        rhstatus
+        ;;
+  restart|reload)
+        restart
+        ;;
+  condrestart)
+        [ -f /var/lock/subsys/logsurfer ] && restart || :
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+        exit 1
+esac
+
+exit $?

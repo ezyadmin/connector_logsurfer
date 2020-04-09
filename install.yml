@@ -1,0 +1,12 @@
+---
+- hosts: all
+  gather_facts: true
+  vars_files: 
+    - group_vars/global
+  roles:
+    - role: common
+      tags: common    
+    - role: install
+      tags: install
+    - role: configuration
+      tags: configuration

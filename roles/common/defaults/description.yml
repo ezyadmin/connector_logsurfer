@@ -1,0 +1,17 @@
+---
+email_notification:
+    _desc: "Notification Email"
+    _type: "text"
+    _lock: true
+
+logsurfer_user:
+    _desc: "Running logsurfer with user"
+    _type: "text"
+
+install_prefix:
+    _desc: "Install architecture-independent files in directory"
+    _type: "text"
+
+logsurfer_path:
+    _desc: "Directory of logsurfer files"
+    _type: "text"

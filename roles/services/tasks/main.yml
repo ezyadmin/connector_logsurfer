@@ -1,0 +1,25 @@
+---
+- name: Restart services logsurfer
+  become: true
+  tags: Restart
+  service:
+    name: logsurfer 
+    state: restarted
+  when: regis_logsurfer_localbin.stat.exists == True or regis_logsurfer_bin.stat.exists == True
+
+- name: Stop services logsurfer
+  become: true
+  tags: Stop
+  service: 
+    name: logsurfer 
+    state: stopped
+  ignore_errors: True
+  when: regis_logsurfer_localbin.stat.exists == True or regis_logsurfer_bin.stat.exists == True
+
+- name: Start services logsurfer
+  become: true
+  tags: Start
+  service:
+    name: logsurfer 
+    state: started
+  when: regis_logsurfer_localbin.stat.exists == True or regis_logsurfer_bin.stat.exists == True

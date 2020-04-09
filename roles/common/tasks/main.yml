@@ -1,0 +1,9 @@
+---
+- name: Lookup /usr/local/bin/logsurfer file
+  register: regis_logsurfer_localbin
+  stat: path=/usr/local/bin/logsurfer
+
+- name: Lookup /usr/bin/logsurfer file
+  register: regis_logsurfer_bin
+  stat: path=/usr/bin/logsurfer
+  when: regis_logsurfer_localbin.stat is defined and regis_logsurfer_localbin.stat.exists != true

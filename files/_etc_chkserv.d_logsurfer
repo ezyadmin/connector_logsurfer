@@ -1,0 +1,1 @@
+service[logsurfer]=x,x,x,/etc/init.d/logsurfer restart,logsurfer,logsurf

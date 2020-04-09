@@ -1,0 +1,10 @@
+---
+- hosts: all
+  gather_facts: false
+  vars_files: 
+    - group_vars/global
+  roles:
+    - role: common
+      tags: common
+    - role: services
+    
