@@ -1,11 +1,9 @@
 ---
 - name: "Define EzyAdmin API URL for register connector"
   set_fact:
-    ezyadmin_register_connector_url: "{{ ezyadmin.api_url }}/external/server/connector/{{ ezyadmin.connector_id }}/hostname/{{ ansible_hostname }}/register/true"
+    ezyadmin_register_connector_url: "{{ ezyadmin_api_url }}/external/server/connector/{{ ezyadmin_connector }}/hostname/{{ ansible_hostname }}/register/true"
   when:
-    - register_ezyadmin_connector
-    - ezyadmin.api_url is defined
-    - ezyadmin.connector_id is defined
+    - register_connector
 
 - name: "Main | Register connector to EzyAdmin - Linux"
   uri:
