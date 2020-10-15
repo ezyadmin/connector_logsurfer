@@ -17,6 +17,7 @@
 
 - name: "Install: packages using a list"
   become: true
+  ignore_errors: True
   when: ansible_os_family == "RedHat"
   yum:
     name: "{{ packages }}"
@@ -28,19 +29,6 @@
       - gcc
       - logrotate
       - chkconfig
-
-- name: "Install: packages using a list"
-  become: true
-  when: ansible_os_family == "RedHat"
-  yum:
-    name: "{{ packages }}"
-    state: present
-  vars:
-    packages:
-      - libselinux-python
-      - initscripts
-      - gcc
-      - logrotate
 
 - name: "Install: packages using a list"
   become: true
