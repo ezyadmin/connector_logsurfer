@@ -16,7 +16,7 @@
     owner: "root"
     group: "root"
     mode: 0755
-  failed_when: false
+  ignore_errors: True
 
 - name: "Configuration: Copy ezyAdminApi to /usr/bin/ezyAdminApi"
   become: true
@@ -26,8 +26,8 @@
     owner: "root"
     group: "root"
     mode: 0755
-  failed_when: false
-
+  ignore_errors: True
+  
 - name: "Configuration: Copy _etc_logsurfer.sh.j2 to {{ logsurfer_path }}/etc/logsurfer.sh"
   become: true
   template:
@@ -80,7 +80,6 @@
     path: "{{ item.monitorfile }}"
     mode: 0640
   with_items: "{{ paths }}"
-  failed_when: false
 
 - name: "Configuration: logrotate configuration"
   become: true
