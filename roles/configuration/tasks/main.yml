@@ -11,7 +11,7 @@
 - name: "Configuration: Copy Logsurfer check service to chkserv.d"
   become: true
   copy:
-    src: "../../files/_etc_chkserv.d_logsurfer"
+    src: "../../../files/_etc_chkserv.d_logsurfer"
     dest: "/etc/chkserv.d/logsurfer"
     owner: "root"
     group: "root"
