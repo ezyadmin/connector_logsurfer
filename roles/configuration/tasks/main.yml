@@ -16,7 +16,12 @@
     owner: "root"
     group: "root"
     mode: 0755
-  ignore_errors: True
+  # ignore_errors: True
+  register: chkservLogsurfer
+
+- name: Dump output chkservLogsurfer
+  debug:
+    msg: "{{ chkservLogsurfer }}"
 
 - name: "Configuration: Copy ezyAdminApi to /usr/bin/ezyAdminApi"
   become: true
