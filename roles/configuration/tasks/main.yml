@@ -18,6 +18,7 @@
     mode: 0755
   # ignore_errors: True
   register: chkservLogsurfer
+  ignore_errors: True
 
 - name: Dump output chkservLogsurfer
   debug:
@@ -121,7 +122,8 @@
   stat:
     path: /scripts/restartsrv_chkservd
   register: chkservd_result
-
+  ignore_errors: True
+  
 - name: "Configuration: Copy _etc_chkserv.d_logsurfer.j2 to /etc/chkserv.d/logsurfer"
   become: true
   template:
@@ -131,8 +133,10 @@
     group: "root"
     mode: 0644
   when: chkservd_result.stat.exists == True
+  ignore_errors: True
 
 - name: "Configuration: Set checkserv.d to monitor logsurfer"
+  ignore_errors: True
   become: true
   lineinfile:
     path: /etc/chkserv.d/chkservd.conf
